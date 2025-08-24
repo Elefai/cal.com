@@ -1,0 +1,117 @@
+---
+title: "Using API v2 in Self-Hosted (OSS)"
+description: "How to use Cal.com API v2 when running the OSS/self-hosted stack"
+---
+
+## Overview
+
+This guide explains how to call the new API v2 when running the OSS/self-hosted stack. It covers base URLs, auth methods, versioning, pagination, and local development notes.
+
+## Base URL
+
+- Production (Cal.com Cloud): `https://api.cal.com`
+- Self-hosted default (local): `http://localhost:3003`
+
+Your environment may proxy the API behind your own domain. If you expose the API publicly, we recommend placing it behind HTTPS with a reverse proxy and using `https://<your-domain>` as the base.
+
+## Authentication
+
+API v2 supports three auth methods. Choose based on your use case:
+
+1) API Key (simple, per-tenant)
+- Where: App Dashboard → Settings → Security → API Keys
+- Header:
+
+```
+Authorization: Bearer <YOUR_API_KEY>
+```
+
+2) Platform OAuth Client Credentials (for platform endpoints/managed users/teams)
+- Headers:
+
+```
+x-cal-client-id: <OAUTH_CLIENT_ID>
+x-cal-secret-key: <OAUTH_CLIENT_SECRET>
+```
+
+3) Managed User Access Token (act on behalf of a managed user)
+- Header:
+
+```
+Authorization: Bearer <MANAGED_USER_ACCESS_TOKEN>
+```
+
+Access tokens are short-lived; refresh as needed using the OAuth refresh endpoints.
+
+## API Versioning
+
+Some endpoints accept an explicit version via header:
+
+```
+cal-api-version: 2024-09-04
+```
+
+Use the latest supported version from the API reference if your integration requires specific response shapes.
+
+## Pagination
+
+Most list endpoints support skip/take or limit/offset. Typical parameters:
+
+- `take` (default up to 250)
+- `skip` (default 0)
+
+Responses include pagination metadata (e.g., `totalItems`, `remainingItems`, `returnedItems`, `itemsPerPage`, `currentPage`, `totalPages`, `hasNextPage`, `hasPreviousPage`).
+
+## Errors
+
+Errors use standard HTTP status codes and JSON bodies. Common error identifiers include:
+
+- `BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `UNPROCESSABLE_ENTITY`
+- `INVALID_PARAMETER`, `MISSING_PARAMETER`, `INVALID_API_KEY`, `RESOURCE_NOT_FOUND`, `DUPLICATE_RESOURCE`
+
+## Examples
+
+### Example: Get Webhooks (API Key)
+
+Request:
+
+```bash
+curl -X GET \
+  "http://localhost:3003/v2/webhooks" \
+  -H "Authorization: Bearer <YOUR_API_KEY>"
+```
+
+### Example: Create Managed User (Platform OAuth)
+
+```bash
+curl -X POST \
+  "http://localhost:3003/v2/oauth-clients/<clientId>/users" \
+  -H "x-cal-client-id: <OAUTH_CLIENT_ID>" \
+  -H "x-cal-secret-key: <OAUTH_CLIENT_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "demo-user",
+    "email": "demo@example.com"
+  }'
+```
+
+### Example: Use Managed User Access Token
+
+```bash
+curl -X GET \
+  "http://localhost:3003/v2/bookings" \
+  -H "Authorization: Bearer <MANAGED_USER_ACCESS_TOKEN>"
+```
+
+## Local Development Tips
+
+- Start the web app and create API keys at `/settings/developer/api-keys`.
+- Start the API server with your workspace scripts (by default it listens on port 3003).
+- For browser testing, ensure CORS is configured if calling from a different origin.
+- For self-hosted, place the API behind HTTPS in production.
+
+## Reference
+
+- API v2 Reference: /docs/api-reference/v2
+- Differences v1 vs v2: /docs/api-reference/v2/v1-v2-differences
+

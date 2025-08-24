@@ -170,6 +170,11 @@
           "pages": ["/self-hosting/guides/appstore-and-integration/syncing-third-party-apps"]
         },
         {
+          "group": "API",
+          "icon": "brackets-curly",
+          "pages": ["/self-hosting/guides/api/using-api-v2"]
+        },
+        {
           "group": "White Labeling",
           "icon": "tag",
           "pages": [
